@@ -1,3 +1,6 @@
+//(C) Bogdan Yachmenev 2026
+//License MPL-2.0
+
 use std::io::{Read, Write};
 
 /// The maximum number of columns per row for flat indexing.
