@@ -5,7 +5,7 @@ use std::io::{Read, Write};
 
 /// Supported data types stored in the database.
 /// All variants (except Empty) are stored in the .sdb format with a type suffix.
-#[derive(Debug, PartialEq, Clone)] 
+#[derive(Debug, PartialEq, Clone)]
 pub enum Value {
 	Empty,
 	String(Box<String>),
@@ -62,7 +62,17 @@ impl Value {
 /// Metadata types for reading data back with type verification.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum DataType {
-	String, Binary, Int8, Int16, Int32, Int64, Uint8, Uint16, Uint32, Uint64, Bool,
+	String,
+	Binary,
+	Int8,
+	Int16,
+	Int32,
+	Int64,
+	Uint8,
+	Uint16,
+	Uint32,
+	Uint64,
+	Bool,
 }
 
 /// A coordinate-based index (Row, Column) for database access.
@@ -96,16 +106,22 @@ pub trait DataBase {
 }
 
 impl Database {
-	/// Resolves Row and Column names to an Index. 
+	/// Resolves Row and Column names to an Index.
 	/// Automatically registers new names and assigns IDs.
 	pub fn get_id(&mut self, row_name: &str, col_name: &str) -> Index {
-		let row = self.row_names.iter().find(|(n, _)| n == row_name).map(|(_, id)| *id)
+		let row = self.row_names
+			.iter()
+			.find(|(n, _)| n == row_name)
+			.map(|(_, id)| *id)
 			.unwrap_or_else(|| {
 				let id = self.row_names.len() as u16;
 				self.row_names.push((row_name.to_string(), id));
 				id
 			});
-		let col = self.col_names.iter().find(|(n, _)| n == col_name).map(|(_, id)| *id)
+		let col = self.col_names
+			.iter()
+			.find(|(n, _)| n == col_name)
+			.map(|(_, id)| *id)
 			.unwrap_or_else(|| {
 				let id = self.col_names.len() as u16;
 				self.col_names.push((col_name.to_string(), id));
@@ -120,15 +136,20 @@ impl DataBase for Database {
 		let r = index.row as usize;
 		let c = index.col as usize;
 
-		if r >= self.data.len() { self.data.resize(r + 1, Vec::new()); }
-		if c >= self.data[r].len() { self.data[r].resize(c + 1, Value::Empty); }
-		
+		if r >= self.data.len() {
+			self.data.resize(r + 1, Vec::new());
+		}
+		if c >= self.data[r].len() {
+			self.data[r].resize(c + 1, Value::Empty);
+		}
+
 		self.data[r][c] = data;
 		Ok(())
 	}
 
 	fn read(&self, index: Index, _dt: DataType) -> Option<Value> {
-		self.data.get(index.row as usize)?
+		self.data
+			.get(index.row as usize)?
 			.get(index.col as usize)
 			.cloned()
 			.filter(|v| !matches!(v, Value::Empty))
@@ -154,12 +175,13 @@ impl DataBase for Database {
 			if buf.len() > 4 && &buf[0..4] == &[0x42, 0x59, 0x4B, 0x02] {
 				let mut cur = 4;
 				for dict in vec![&mut rows, &mut cols] {
-					let count = u16::from_be_bytes([buf[cur], buf[cur+1]]) as usize;
+					let count = u16::from_be_bytes([buf[cur], buf[cur + 1]]) as usize;
 					cur += 2;
 					for _ in 0..count {
-						let id = u16::from_be_bytes([buf[cur], buf[cur+1]]);
-						let len = buf[cur+2] as usize;
-						let name = String::from_utf8_lossy(&buf[cur+3..cur+3+len]).to_string();
+						let id = u16::from_be_bytes([buf[cur], buf[cur + 1]]);
+						let len = buf[cur + 2] as usize;
+						let name = String::from_utf8_lossy(&buf[cur + 3..cur + 3 + len])
+							.to_string();
 						dict.push((name, id));
 						cur += 3 + len;
 					}
@@ -167,24 +189,35 @@ impl DataBase for Database {
 
 				let marker = [0xED, 0x65, 0x6E, 0x64, 0xDE];
 				while cur + 4 <= buf.len() {
-					let c = u16::from_be_bytes([buf[cur], buf[cur+1]]) as usize;
-					let r = u16::from_be_bytes([buf[cur+2], buf[cur+3]]) as usize;
+					let c = u16::from_be_bytes([buf[cur], buf[cur + 1]]) as usize;
+					let r = u16::from_be_bytes([buf[cur + 2], buf[cur + 3]]) as usize;
 					cur += 4;
 
 					if let Some(pos) = buf[cur..].windows(5).position(|w| w == marker) {
-						if r >= data.len() { data.resize(r + 1, Vec::new()); }
-						if c >= data[r].len() { data[r].resize(c + 1, Value::Empty); }
-						
-						let tid = buf[cur + pos - 1]; 
+						if r >= data.len() {
+							data.resize(r + 1, Vec::new());
+						}
+						if c >= data[r].len() {
+							data[r].resize(c + 1, Value::Empty);
+						}
+
+						let tid = buf[cur + pos - 1];
 						let raw_data = &buf[cur..cur + pos - 1];
-						
+
 						data[r][c] = Value::from_parts(tid, raw_data);
 						cur += pos + 5;
-					} else { break; }
+					} else {
+						break;
+					}
 				}
 			}
 		}
-		Database { data, _filepath: path_to.to_string(), row_names: rows, col_names: cols }
+		Database {
+			data,
+			_filepath: path_to.to_string(),
+			row_names: rows,
+			col_names: cols,
+		}
 	}
 
 	fn save(&self, path: &str) -> std::io::Result<()> {
@@ -202,8 +235,10 @@ impl DataBase for Database {
 
 		for (r_idx, row) in self.data.iter().enumerate() {
 			for (c_idx, val) in row.iter().enumerate() {
-				if matches!(val, Value::Empty) { continue; }
-				
+				if matches!(val, Value::Empty) {
+					continue;
+				}
+
 				file.write_all(&(c_idx as u16).to_be_bytes())?;
 				file.write_all(&(r_idx as u16).to_be_bytes())?;
 
@@ -222,7 +257,7 @@ impl DataBase for Database {
 					_ => vec![],
 				};
 				file.write_all(&b)?;
-				file.write_all(&[val.type_id()])?; 
+				file.write_all(&[val.type_id()])?;
 				file.write_all(&[0xED, 0x65, 0x6E, 0x64, 0xDE])?;
 			}
 		}

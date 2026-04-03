@@ -33,8 +33,8 @@ unsafe impl GlobalAlloc for TrackingAllocator {
 static GLOBAL: TrackingAllocator = TrackingAllocator;
 
 /// Helper to get current heap usage
-fn get_mem() -> usize { 
-	ALLOCATED.load(Ordering::SeqCst) 
+fn get_mem() -> usize {
+	ALLOCATED.load(Ordering::SeqCst)
 }
 
 // --- Integration Tests ---
@@ -47,14 +47,15 @@ fn test_1_save_and_open_consistency() {
 	{
 		let mut db = Database::open(path);
 		let id = db.get_id("Users", "Login");
-		db.write(id, Value::String(Box::new("Admin".to_string()))).unwrap();
+		db.write(id, Value::String(Box::new("Admin".to_string())))
+			.unwrap();
 		db.save(path).unwrap();
 	}
 
 	let db_new = Database::open(path);
 	let id_new = Index { row: 0, col: 0 };
 	let val = db_new.read(id_new, DataType::String).unwrap();
-	
+
 	assert_eq!(val, Value::String(Box::new("Admin".to_string())));
 	println!("Test 1:\tSDB Format consistency verified (Magic: BYK)");
 	let _ = fs::remove_file(path);
@@ -64,19 +65,26 @@ fn test_1_save_and_open_consistency() {
 fn test_2_multiple_types_write_read() {
 	let path = "test_2.sdb";
 	let mut db = Database::open(path);
-	
+
 	let id_str = db.get_id("Row1", "ColStr");
 	let id_int = db.get_id("Row1", "ColInt");
 	let id_bool = db.get_id("Row1", "ColBool");
 
-	db.write(id_str, Value::String(Box::new("Rust".into()))).unwrap();
+	db.write(id_str, Value::String(Box::new("Rust".into())))
+		.unwrap();
 	db.write(id_int, Value::Int64(1337)).unwrap();
 	db.write(id_bool, Value::Bool(true)).unwrap();
 
-	assert_eq!(db.read(id_str, DataType::String).unwrap(), Value::String(Box::new("Rust".into())));
-	assert_eq!(db.read(id_int, DataType::Int64).unwrap(), Value::Int64(1337));
+	assert_eq!(
+		db.read(id_str, DataType::String).unwrap(),
+		Value::String(Box::new("Rust".into()))
+	);
+	assert_eq!(
+		db.read(id_int, DataType::Int64).unwrap(),
+		Value::Int64(1337)
+	);
 	assert_eq!(db.read(id_bool, DataType::Bool).unwrap(), Value::Bool(true));
-	
+
 	println!("Test 2:\tType safety for SDB types verified");
 }
 
@@ -118,8 +126,12 @@ fn test_4_delete_and_overwrite() {
 	db.delete(id);
 	assert!(db.read(id, DataType::Int64).is_none());
 
-	db.write(id, Value::String(Box::new("NewValue".into()))).unwrap();
-	assert_eq!(db.read(id, DataType::String).unwrap(), Value::String(Box::new("NewValue".into())));
+	db.write(id, Value::String(Box::new("NewValue".into())))
+		.unwrap();
+	assert_eq!(
+		db.read(id, DataType::String).unwrap(),
+		Value::String(Box::new("NewValue".into()))
+	);
 	println!("Test 4:\tDelete and Overwrite verified in SDB");
 }
 
@@ -128,8 +140,8 @@ fn test_5_high_index_performance() {
 	let path = "test_5.sdb";
 	let mut db = Database::open(path);
 	let id_low = db.get_id("First", "Col");
-	let id_high = db.get_id("VeryFarRow", "Col"); 
-	
+	let id_high = db.get_id("VeryFarRow", "Col");
+
 	db.write(id_low, Value::Int64(1)).unwrap();
 	db.write(id_high, Value::Int64(2)).unwrap();
 
@@ -150,7 +162,10 @@ fn test_6_all_numeric_types() {
 	db.write(id_u64, Value::Uint64(u64::MAX)).unwrap();
 
 	assert_eq!(db.read(id_i8, DataType::Int8).unwrap(), Value::Int8(-127));
-	assert_eq!(db.read(id_u64, DataType::Uint64).unwrap(), Value::Uint64(u64::MAX));
+	assert_eq!(
+		db.read(id_u64, DataType::Uint64).unwrap(),
+		Value::Uint64(u64::MAX)
+	);
 	println!("Test 6:\tNumeric limits and SDB type markers verified");
 }
 
@@ -161,12 +176,17 @@ fn test_7_binary_blob_consistency() {
 	{
 		let mut db = Database::open(path);
 		let id = db.get_id("Files", "Raw");
-		db.write(id, Value::Binary(Box::new(binary_data.clone()))).unwrap();
+		db.write(id, Value::Binary(Box::new(binary_data.clone())))
+			.unwrap();
 		db.save(path).unwrap();
 	}
 	let db_new = Database::open(path);
-	let val = db_new.read(Index { row: 0, col: 0 }, DataType::Binary).unwrap();
-	if let Value::Binary(data) = val { assert_eq!(*data, binary_data); }
+	let val = db_new
+		.read(Index { row: 0, col: 0 }, DataType::Binary)
+		.unwrap();
+	if let Value::Binary(data) = val {
+		assert_eq!(*data, binary_data);
+	}
 	let _ = fs::remove_file(path);
 	println!("Test 7:\tBinary Blob (Value::Binary) verified in SDB");
 }
@@ -175,10 +195,10 @@ fn test_7_binary_blob_consistency() {
 fn benchmark_smdb_performance_and_ram() {
 	let path = "bench_final.sdb";
 	let _ = fs::remove_file(path);
-	
+
 	let base_mem = get_mem();
 	let mut db = Database::open(path);
-	let (rows, cols) = (1000, 100); 
+	let (rows, cols) = (1000, 100);
 	let total = rows * cols;
 
 	println!("\n--- SDB Performance & RAM Report (Magic: BYK) ---");
@@ -186,7 +206,10 @@ fn benchmark_smdb_performance_and_ram() {
 	let start_write = Instant::now();
 	for r in 0..rows {
 		for c in 0..cols {
-			let idx = Index { row: r as u16, col: c as u16 };
+			let idx = Index {
+				row: r as u16,
+				col: c as u16,
+			};
 			db.write(idx, Value::Int64(r as i64)).unwrap();
 		}
 	}
@@ -209,10 +232,10 @@ fn benchmark_smdb_performance_and_ram() {
 fn benchmark_smdb_strings_ram() {
 	let path = "bench_strings.sdb";
 	let _ = fs::remove_file(path);
-	
+
 	let base_mem = get_mem();
 	let mut db = Database::open(path);
-	
+
 	let rows = 1000;
 	let cols = 100;
 	let total = rows * cols;
@@ -224,9 +247,13 @@ fn benchmark_smdb_strings_ram() {
 	let start_write = Instant::now();
 	for r in 0..rows {
 		for c in 0..cols {
-			let idx = Index { row: r as u16, col: c as u16 };
+			let idx = Index {
+				row: r as u16,
+				col: c as u16,
+			};
 			// Each string is a new allocation in the heap
-			db.write(idx, Value::String(Box::new(sample_text.to_string()))).unwrap();
+			db.write(idx, Value::String(Box::new(sample_text.to_string())))
+				.unwrap();
 		}
 	}
 	let dur_write = start_write.elapsed();
@@ -235,8 +262,11 @@ fn benchmark_smdb_strings_ram() {
 	println!("Write {} strings:\t{:?}", total, dur_write);
 	println!("Total RAM Usage:\t{:.2} MB", ram_usage as f64 / 1048576.0);
 	println!("RAM per string cell:\t{} bytes", ram_usage / total);
-	println!("Expected overhead:\t~{} bytes (Value + Box + String Struct + Body)", 20 + 24 + text_len);
-	
+	println!(
+		"Expected overhead:\t~{} bytes (Value + Box + String Struct + Body)",
+		20 + 24 + text_len
+	);
+
 	db.save(path).unwrap();
 	let file_size = fs::metadata(path).unwrap().len();
 	println!("File size on disk:\t{:.2} KB", file_size as f64 / 1024.0);

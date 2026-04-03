@@ -1,0 +1,9 @@
+hard_tabs = true
+tab_spaces = 4
+max_width = 100
+newline_style = "Unix"
+trim_trailing_whitespace = true
+insert_final_newline = true
+imports_granularity = "Crate"
+group_imports = "StdExternalCrate"
+edition = "2021"
