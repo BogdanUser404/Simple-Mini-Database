@@ -15,7 +15,7 @@ categories = ["database"]
 #None
 
 [lib]
-name = "sdb"
+name = "smdb"
 path = "src/lib.rs"
 
 [profile.release]
