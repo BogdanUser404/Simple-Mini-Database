@@ -8,13 +8,13 @@ See usage examples in `tests/integration_test.rs`.
 The database format is designed for O(1) access and is very simple:
 
 1. **File Header**: 
-        Starts with `0x42594B` (Magic "BYK") followed by the Version byte (current: `0x01`).
+        Starts with `0x42594B` (Magic "BYK") followed by the Version byte (current: `0x02`).
 
 2. **Dictionaries**:
         Stores row and column names as linear maps.
 
 3. **Data Cells**:
-        `col` (2 bytes) + `row` (2 bytes) + `data_payload` + `0xED656E64DE` (End marker).
+        `col` (2 bytes) + `row` (2 bytes) + `data_payload` + `Data type` +`0xED656E64DE` (End marker).
 
 Fast, flat, and transparent.
 Licensed under MPL-2.0.
