@@ -1,4 +1,4 @@
-use sdb::{Database, DataBase,Value, DataType};
+use smdb::{Database, DataBase,Value, DataType};
 use std::fs;
 
 #[test]
