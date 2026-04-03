@@ -4,7 +4,6 @@ version = "0.1.0"
 authors = ["Bogdan Yachmenev <yachmenevbogdan350@gmail.com>"]
 edition = "2024"
 description = "Minimal database format and database lib"
-documentation = ""
 readme = "README.md"
 repository = "https://github.com/BogdanUser404/Simple-Mini-Database"
 license = "MPL-2.0"
