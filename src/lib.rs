@@ -48,12 +48,10 @@ pub struct Index {
 pub struct Database {
 	data: Vec<Vec<u8>>,
 	_filepath: String,
-	/// Association maps (Linear Maps) for human-readable row and column names.
 	row_names: Vec<(String, u16)>,
 	col_names: Vec<(String, u16)>,
 }
 
-/// Trait defining the core database operations.
 pub trait DataBase {
 	fn write(&mut self, index: Index, data: Value) -> Result<(), String>;
 	fn read(&self, index: Index, data_type: DataType) -> Option<Value>;
